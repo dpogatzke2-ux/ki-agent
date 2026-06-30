@@ -1,25 +1,27 @@
 package com.kiagent.backend
 
-class BackendRouter {
+import com.kiagent.config.AgentConfig
+import com.kiagent.config.Provider
+import com.kiagent.model.ChatMessage
 
-    private var backend: ModelBackend = DummyBackend()
+class BackendRouter(
+    private val configProvider: () -> AgentConfig = { AgentConfig() }
+) {
 
-    fun setBackend(newBackend: ModelBackend) {
-        backend = newBackend
-    }
+    private val localBackend = LocalBackend(configProvider)
+    private val remoteBackend = RemoteBackend(configProvider)
 
     fun currentBackend(): ModelBackend {
-        return backend
+        return when (configProvider().provider) {
+            Provider.LOCAL -> localBackend
+            Provider.OPENAI,
+            Provider.OPENROUTER,
+            Provider.GEMINI,
+            Provider.CUSTOM -> remoteBackend
+        }
     }
 
-    suspend fun generate(prompt: String): String {
-        return backend.generate(
-            listOf(
-                com.kiagent.model.ChatMessage(
-                    role = "user",
-                    content = prompt
-                )
-            )
-        )
+    suspend fun generate(messages: List<ChatMessage>): String {
+        return currentBackend().generate(messages)
     }
 }

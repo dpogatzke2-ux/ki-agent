@@ -6,15 +6,6 @@ enum class BackendMode {
     REMOTE
 }
 
-enum class ModelFormat {
-    GGUF,
-    MNN,
-    SAFETENSORS,
-    ONNX,
-    TFLITE,
-    UNKNOWN
-}
-
 data class ChatMessage(
     val role: String,
     val content: String

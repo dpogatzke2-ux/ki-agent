@@ -2,7 +2,9 @@ package com.kiagent
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -11,16 +13,18 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.weight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -28,33 +32,42 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.kiagent.backend.DummyBackend
+import com.kiagent.config.AgentPreferences
+import com.kiagent.config.Provider
 import com.kiagent.model.ChatMessage
-import com.kiagent.viewmodel.ChatViewModel
-import com.kiagent.viewmodel.ChatViewModelFactory
+import com.kiagent.viewmodel.AgentViewModel
+import com.kiagent.viewmodel.AgentViewModelFactory
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        val backend = DummyBackend()
+        val preferences = AgentPreferences(applicationContext)
 
         setContent {
-            val vm: ChatViewModel = viewModel(
-                factory = ChatViewModelFactory(backend)
+            val vm: AgentViewModel = viewModel(
+                factory = AgentViewModelFactory(preferences)
             )
-            AgentApp(vm)
+            AgentScreen(vm)
         }
     }
 }
 
 @Composable
-fun AgentApp(vm: ChatViewModel) {
+fun AgentScreen(vm: AgentViewModel) {
     val messages by vm.messages.collectAsState()
+    val config by vm.config.collectAsState()
     val busy by vm.busy.collectAsState()
     var input by remember { mutableStateOf("") }
+
+    val picker = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.OpenDocument()
+    ) { uri ->
+        uri?.let { vm.setLocalModelPath(it.toString()) }
+    }
 
     MaterialTheme {
         Scaffold(
@@ -71,6 +84,75 @@ fun AgentApp(vm: ChatViewModel) {
                 Column(
                     modifier = Modifier.fillMaxSize()
                 ) {
+                    Card(
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(12.dp),
+                            verticalArrangement = Arrangement.spacedBy(10.dp)
+                        ) {
+                            Text("Backend", style = MaterialTheme.typography.titleMedium)
+
+                            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                listOf(
+                                    Provider.LOCAL,
+                                    Provider.OPENAI,
+                                    Provider.OPENROUTER,
+                                    Provider.GEMINI,
+                                    Provider.CUSTOM
+                                ).forEach { provider ->
+                                    FilterChip(
+                                        selected = config.provider == provider,
+                                        onClick = { vm.setProvider(provider) },
+                                        label = { Text(provider.name) }
+                                    )
+                                }
+                            }
+
+                            OutlinedTextField(
+                                value = config.apiKey,
+                                onValueChange = vm::setApiKey,
+                                modifier = Modifier.fillMaxWidth(),
+                                label = { Text("API-Key") },
+                                visualTransformation = PasswordVisualTransformation()
+                            )
+
+                            OutlinedTextField(
+                                value = config.endpoint,
+                                onValueChange = vm::setEndpoint,
+                                modifier = Modifier.fillMaxWidth(),
+                                label = { Text("Endpoint") }
+                            )
+
+                            OutlinedTextField(
+                                value = config.model,
+                                onValueChange = vm::setModel,
+                                modifier = Modifier.fillMaxWidth(),
+                                label = { Text("Modell") }
+                            )
+
+                            Button(onClick = { picker.launch(arrayOf("*/*")) }) {
+                                Text("Lokales Modell wählen")
+                            }
+
+                            Text(
+                                text = if (config.localModelPath.isBlank()) {
+                                    "Kein lokales Modell gewählt"
+                                } else {
+                                    "Lokales Modell: ${config.localModelPath}"
+                                },
+                                style = MaterialTheme.typography.bodySmall
+                            )
+
+                            Text(
+                                text = "Aktiver Modus: ${config.provider}",
+                                style = MaterialTheme.typography.bodySmall
+                            )
+                        }
+                    }
+
+                    Spacer(Modifier.height(12.dp))
+
                     Card(
                         modifier = Modifier
                             .weight(1f)
