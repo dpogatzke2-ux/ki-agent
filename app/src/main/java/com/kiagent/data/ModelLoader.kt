@@ -1,32 +1,23 @@
 package com.kiagent.data
 
 import com.kiagent.model.ModelFormat
+import java.io.File
 
 object ModelLoader {
 
-    fun detectFormat(path: String): ModelFormat {
-
-        val p = path.lowercase()
+    fun detectFormat(fileName: String): ModelFormat {
+        val name = fileName.lowercase()
 
         return when {
-
-            p.endsWith(".gguf") ->
-                ModelFormat.GGUF
-
-            p.endsWith(".mnn") ->
-                ModelFormat.MNN
-
-            p.endsWith(".onnx") ->
-                ModelFormat.ONNX
-
-            p.endsWith(".tflite") ->
-                ModelFormat.TFLITE
-
-            p.endsWith(".safetensors") ->
-                ModelFormat.SAFETENSORS
-
-            else ->
-                ModelFormat.UNKNOWN
+            name.endsWith(".gguf") -> ModelFormat.GGUF
+            name.endsWith(".safetensors") -> ModelFormat.SAFETENSORS
+            name.endsWith(".mnn") -> ModelFormat.MNN
+            name.endsWith(".onnx") -> ModelFormat.ONNX
+            name.endsWith(".tflite") -> ModelFormat.LITERT
+            name.endsWith(".pte") -> ModelFormat.EXECUTORCH
+            else -> ModelFormat.UNKNOWN
         }
     }
+
+    fun detectFormat(file: File): ModelFormat = detectFormat(file.name)
 }

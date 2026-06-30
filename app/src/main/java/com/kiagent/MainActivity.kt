@@ -13,11 +13,11 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.weight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -56,6 +56,7 @@ class MainActivity : ComponentActivity() {
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AgentScreen(vm: AgentViewModel) {
     val messages by vm.messages.collectAsState()
@@ -82,11 +83,10 @@ fun AgentScreen(vm: AgentViewModel) {
                     .padding(12.dp)
             ) {
                 Column(
-                    modifier = Modifier.fillMaxSize()
+                    modifier = Modifier.fillMaxSize(),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    Card(
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
+                    Card(modifier = Modifier.fillMaxWidth()) {
                         Column(
                             modifier = Modifier.padding(12.dp),
                             verticalArrangement = Arrangement.spacedBy(10.dp)
@@ -151,12 +151,10 @@ fun AgentScreen(vm: AgentViewModel) {
                         }
                     }
 
-                    Spacer(Modifier.height(12.dp))
-
                     Card(
                         modifier = Modifier
-                            .weight(1f)
                             .fillMaxWidth()
+                            .height(360.dp)
                     ) {
                         LazyColumn(
                             modifier = Modifier
@@ -170,30 +168,24 @@ fun AgentScreen(vm: AgentViewModel) {
                         }
                     }
 
-                    Spacer(Modifier.height(12.dp))
-
-                    Row(
+                    OutlinedTextField(
+                        value = input,
+                        onValueChange = { input = it },
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        OutlinedTextField(
-                            value = input,
-                            onValueChange = { input = it },
-                            modifier = Modifier.weight(1f),
-                            label = { Text("Nachricht") },
-                            enabled = !busy,
-                            singleLine = true
-                        )
+                        label = { Text("Nachricht") },
+                        enabled = !busy,
+                        singleLine = true
+                    )
 
-                        Button(
-                            onClick = {
-                                vm.send(input)
-                                input = ""
-                            },
-                            enabled = !busy
-                        ) {
-                            Text(if (busy) "..." else "Senden")
-                        }
+                    Button(
+                        onClick = {
+                            vm.send(input)
+                            input = ""
+                        },
+                        enabled = !busy,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text(if (busy) "..." else "Senden")
                     }
                 }
             }

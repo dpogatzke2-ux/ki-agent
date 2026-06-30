@@ -1,18 +1,5 @@
 package com.kiagent.model
 
-enum class ModelFormat {
-    GGUF,
-    SAFETENSORS,
-    MNN,
-    ONNX,
-    LITERT,
-    EXECUTORCH,
-    OPENAI,
-    OPENROUTER,
-    GEMINI,
-    UNKNOWN
-}
-
 data class ModelInfo(
     val id: String,
     val displayName: String,
@@ -26,7 +13,6 @@ data class ModelInfo(
 )
 
 object ModelRegistry {
-
     private val models = mutableListOf<ModelInfo>()
 
     fun register(model: ModelInfo) {

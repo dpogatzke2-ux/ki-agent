@@ -1,11 +1,5 @@
 package com.kiagent.model
 
-enum class BackendMode {
-    AUTO,
-    LOCAL,
-    REMOTE
-}
-
 data class ChatMessage(
     val role: String,
     val content: String
